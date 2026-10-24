@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>魔法学院大冒险</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <canvas id="map" aria-label="学院地图。点地砖走路，点怪物答题。"></canvas>
+      <p id="hint">点地砖走路 · 点怪物答题施法 · 方向键也能走</p>
+      <div id="toast" hidden role="status"></div>
+    </div>
+    <aside id="hud">
+      <div class="who">
+        <svg class="portrait" viewBox="0 0 72 72" aria-hidden="true">
+          <circle cx="36" cy="36" r="34" fill="#f3e2c8"/>
+          <path d="M18 46c2-10 10-16 18-16s16 6 18 16v8H18z" fill="#3f6f8f"/>
+          <circle cx="36" cy="30" r="10" fill="#f4d2b4"/>
+          <path d="M22 30 36 12l14 18" fill="#c9842a"/>
+          <circle cx="32" cy="30" r="1.4" fill="#241c16"/>
+          <circle cx="40" cy="30" r="1.4" fill="#241c16"/>
+        </svg>
+        <div>
+          <p class="eyebrow">学徒</p>
+          <h1>小魔法师</h1>
+          <p id="floor-name">启蒙回廊</p>
+        </div>
+      </div>
+      <div class="meter">
+        <div class="meter-label"><span>生命</span><span id="hp-num">100/100</span></div>
+        <div class="bar"><span id="hp-bar"></span></div>
+      </div>
+      <dl class="stats">
+        <div><dt>金币</dt><dd id="gold">0</dd></div>
+        <div><dt>火球</dt><dd id="spell">26</dd></div>
+        <div><dt>连击</dt><dd id="combo">0</dd></div>
+      </dl>
+      <div id="pips" class="pips" aria-label="连击槽"></div>
+      <div class="actions">
+        <button id="btn-shop" type="button">魔法商店</button>
+        <button id="btn-lib" type="button">图书馆</button>
+        <button id="btn-floors" type="button">楼层</button>
+        <button id="btn-mute" type="button">声音开</button>
+      </div>
+      <ol id="log" aria-live="polite"></ol>
+      <button id="btn-reset" class="texty" type="button">重新开始</button>
+    </aside>
+  </div>
+
+  <div id="title" class="overlay">
+    <div class="card title-card">
+      <p class="eyebrow">答题即施法</p>
+      <h2>魔法学院大冒险</h2>
+      <p>在学院里走动，遇到怪物就回答问题。答对会放出火球，连续答对三次会暴击。</p>
+      <ul>
+        <li>答错会掉一点生命，这道题会被关进图书馆</li>
+        <li>金币可以买法袍和法杖</li>
+        <li>楼层里有冒险、一年级数学和一年级语文。每一路都要先打败上一层的守护者</li>
+      </ul>
+      <div class="row">
+        <button id="start-btn" type="button">进入学院</button>
+        <button id="fresh-btn" type="button" hidden>新的冒险</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="battle" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="battle-title">
+      <header class="battle-head">
+        <div>
+          <p id="battle-kicker" class="eyebrow"></p>
+          <h2 id="battle-title">史莱姆</h2>
+        </div>
+        <div class="meter slim">
+          <div class="meter-label"><span>对手</span><span id="enemy-hp-num"></span></div>
+          <div class="bar enemy"><span id="enemy-hp"></span></div>
+        </div>
+      </header>
+      <p id="battle-q"></p>
+      <div id="battle-options" class="options"></div>
+      <p id="battle-feedback" aria-live="polite"></p>
+      <div class="row">
+        <button id="battle-ack" type="button" hidden>知道了</button>
+        <button id="battle-next" type="button" hidden>继续探索</button>
+        <button id="battle-flee" type="button">先撤退</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shop" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+      <p class="eyebrow">金币换成装备</p>
+      <h2 id="shop-title">魔法商店</h2>
+      <div id="shop-list" class="stack"></div>
+      <button id="shop-close" type="button">离开商店</button>
+    </div>
+  </div>
+
+  <div id="library" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="lib-title">
+      <p class="eyebrow">被封印的错题</p>
+      <h2 id="lib-title">图书馆</h2>
+      <div id="lib-list" class="stack"></div>
+      <div id="lib-review" hidden>
+        <p id="lib-q"></p>
+        <div id="lib-options" class="options"></div>
+        <p id="lib-feedback" aria-live="polite"></p>
+        <button id="lib-back" type="button">返回书架</button>
+      </div>
+      <button id="lib-close" type="button">离开图书馆</button>
+    </div>
+  </div>
+
+  <div id="floors" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="floors-title">
+      <p class="eyebrow">先修关卡</p>
+      <h2 id="floors-title">学院楼层</h2>
+      <div id="floor-list" class="stack"></div>
+      <button id="floors-close" type="button">返回</button>
+    </div>
+  </div>
+
+  <div id="ending" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="ending-title">
+      <p class="eyebrow">顶层也安静了</p>
+      <h2 id="ending-title">学院试炼完成</h2>
+      <p>每一路的守护者都被火球送回了书架。图书馆里如果还关着错题，可以回去把封印解开。</p>
+      <button id="ending-close" type="button">在学院里再走走</button>
+    </div>
+  </div>
+
+  <script src="src/content.js"></script>
+  <script src="src/grade1.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
